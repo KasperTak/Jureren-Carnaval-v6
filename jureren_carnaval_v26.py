@@ -731,18 +731,33 @@ else:
             .merge(alle_deelnemers, on='Nr.', how='left')
             .sort_values(['Jurylid', 'Nr.']))
         
+        # ---------------------- voortgang in % per jurylid-------------------
+        totaal_deelnemers = len(alle_deelnemers)
+        st.write(f"totaal aantal deelnemers: {totaal_deelnemers}")
         
-        # Toon status
-        st.subheader(''':blue[Status juryleden]''')
-        if ontbrekend.empty:
-            st.success("✅ Alle juryleden hebben hun beoordelingen ingeleverd!")
-        else:
-            st.warning("⚠️ Niet alle juryleden hebben hun beoordelingen afgerond.")
+        st.subheader("Voortgang per jurylid", divider = 'red')
+        
+        for jurylid in alle_juryleden:
+            aantal_ontbrekend = ontbrekend[ontbrekend["Jurylid"] == jurylid].shape[0]
+            aantal_ingevuld = totaal_deelnemers - aantal_ontbrekend
+            percentage = round((aantal_ingevuld / totaal_deelnemers ) * 100)
             
-            for jurylid, groep in ontbrekend.groupby("Jurylid"):
-                st.markdown(f"**{jurylid} mist nog beoordelingen voor:**")
-                for _, row in groep.iterrows():
-                    st.write(f" Nr. {row['Nr.']} | {row['vereniging']} | ({row['titel']})")
+            if percentage == 100:
+                st.success(f"✅ {jurylid}: {percentage}% compleet")
+            else:
+                st.info(f"⏳ {jurylid}: {percentage}% compleet")
+        
+        # # Toon status
+        # st.subheader(''':blue[Status juryleden]''')
+        # if ontbrekend.empty:
+        #     st.success("✅ Alle juryleden hebben hun beoordelingen ingeleverd!")
+        # else:
+        #     st.warning("⚠️ Niet alle juryleden hebben hun beoordelingen afgerond.")
+            
+        #     for jurylid, groep in ontbrekend.groupby("Jurylid"):
+        #         st.markdown(f"**{jurylid} mist nog beoordelingen voor:**")
+        #         for _, row in groep.iterrows():
+        #             st.write(f" Nr. {row['Nr.']} | {row['vereniging']} | ({row['titel']})")
                     
             
         # Forceerbare berekening
@@ -950,6 +965,5 @@ else:
         st.badge("Let op: wijzigingen hier **overschrijven de jury-invoer**."
                 "Na upload kun je direct naar het tabblad **Uitslag** om opnieuw te berekenen.", color='violet')
         
-
 
 
