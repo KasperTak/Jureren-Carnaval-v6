@@ -311,6 +311,14 @@ def login():
 #%%
 def beoordeling_categorie_jurylid(categorie, jurylid, sheet_name="Beoordelingen_2026"):
     st.header(f'Beoordeel de stoetlopers van de categorie {categorie}')
+    
+    is_groepenjury = st.session_state['soort'] == 'g'
+    is_wagens_categorie = "WAGEN" in categorie.upper()
+    is_groepenjury_op_wagen = is_groepenjury and is_wagens_categorie
+    
+    if is_groepenjury_op_wagen:
+        st.info("Als **groepenjury** beoordeel je bij **wagens** uitsluitend het criterium: **Carnavalesk**.")
+    
     # criteria = ['Idee', 'Bouwtechnisch', 'Afwerking', 'Carnavalesk', 'Actie']
     
     # Bestaande beoordelingen ophalen 
@@ -331,19 +339,23 @@ def beoordeling_categorie_jurylid(categorie, jurylid, sheet_name="Beoordelingen_
         st.markdown(f"#### {nummer}🎭 **{vereniging}** — *{titel}* ")
 
         # --- Logica voor welke criteria getoond worden ---
-        
-        ## als categorie Groepen (A/B/C) is en soort_jury is jury_g: dan ook Carnavalesk
-        if "G" in categorie and st.session_state['soort'] == 'g':
-            criteria = ["Idee", "Bouwtechnisch", "Afwerking", "Carnavalesk", "Actie"]
-        ## als categorie Wagens (A/B) en soort_jury is jury_g: dan ALLEEN Carnavalesk
-        elif "W" in categorie and st.session_state['soort'] == 'g':
+        if is_groepenjury_op_wagen:
             criteria = ["Carnavalesk"]
-        ## als categorie Wagens en soort_jury is jury_w: dan ALLES criteria
-        elif "W" in categorie: #and st.session_state['soort'] == 'w':
-            criteria = ["Idee", "Bouwtechnisch", "Afwerking", "Carnavalesk", "Actie"]
-        ## anders, (dus bij T&K en E&D), ook Carnavalesk
         else:
             criteria = ["Idee", "Bouwtechnisch", "Afwerking", "Carnavalesk", "Actie"]
+        
+        # ## als categorie Groepen (A/B/C) is en soort_jury is jury_g: dan ook Carnavalesk
+        # if "G" in categorie and st.session_state['soort'] == 'g':
+        #     criteria = ["Idee", "Bouwtechnisch", "Afwerking", "Carnavalesk", "Actie"]
+        # ## als categorie Wagens (A/B) en soort_jury is jury_g: dan ALLEEN Carnavalesk
+        # elif "W" in categorie and st.session_state['soort'] == 'g':
+        #     criteria = ["Carnavalesk"]
+        # ## als categorie Wagens en soort_jury is jury_w: dan ALLES criteria
+        # elif "W" in categorie: #and st.session_state['soort'] == 'w':
+        #     criteria = ["Idee", "Bouwtechnisch", "Afwerking", "Carnavalesk", "Actie"]
+        # ## anders, (dus bij T&K en E&D), ook Carnavalesk
+        # else:
+        #     criteria = ["Idee", "Bouwtechnisch", "Afwerking", "Carnavalesk", "Actie"]
         
         # Controleren op dit jurylid deze deelnemer al heeft beoordeeld
         mask = (
