@@ -36,6 +36,9 @@ def init_session():
         "active_tab": "Home",
         "pending_saves": [],
         
+        "df_beoordelingen_cache": None,
+        "sheet_beoordelingen": None,
+        
         "uitslag_berekend" : False,
         "df_rapport" : None,
         "df_pers" : None,
@@ -59,13 +62,28 @@ client = gspread.authorize(creds)
 ## Open de Google Sheet
 # sheet = client.open("Jury_beoordelingen_2026_v1").worksheet("Beoordeling")
 # sheet_top3 = client.open("Jury_beoordelingen_2026_v1").worksheet("LeutigsteDeelnemer")
+
+# Bestaande data ophalen
+@st.cache_data(ttl=300)
+def load_sheet_data(sheet_name):
+    sheet = client.open("Jury_beoordelingen_2026_v1").worksheet(sheet_name)
+    records = sheet.get_all_records()
+    df = pd.DataFrame(records)
+    df.columns = [c.strip() for c in df.columns]
+    return df
+
+# google sheets 1x per sessie openen
+if st.session_state.sheet_beoordelingen is None:
+    st.session_state.sheet_beoordelinen = (client.open("Jury_beoordelinen_2026_v1").worksheet("Beoordelingen_2026"))
+if st.session_state.df_beoordelingen_cache is None:
+    st.session_state.df_beoordelingen_cache = load_sheet_data("Beoordelingen_2026")
 #%%
 def mail_excel(excel_bytes_1, filename_1, excel_bytes_2, filename_2):
     msg = EmailMessage()
     msg["Subject"] = "Uitslag carnavalsoptocht Sas van Gent (Betekoppen) 2026 [geautomatiseerde mail]"
     msg["From"] = st.secrets["email"]["from"]
     msg["To"] = st.secrets["email"]["to"]
-    msg["Cc"] = "kasper.tak12@gmail.com" #"werloe96@zeelandnet.nl"
+    msg["Cc"] = "kasper.tak12@gmail.com" 
     
     msg.set_content(
         "Beste, \n\nAlle onderdelen zijn beoordeeld door de juryleden.\n"
@@ -238,19 +256,11 @@ def df_to_excel_colored(df):
     
     return output
  #%% --- spul voor top-3 bepaling
-# Bestaande data ophalen
-@st.cache_data(ttl=300)
-def load_sheet_data(sheet_name):
-    sheet = client.open("Jury_beoordelingen_2026_v1").worksheet(sheet_name)
-    records = sheet.get_all_records()
-    df = pd.DataFrame(records)
-    df.columns = [c.strip() for c in df.columns]
-    return df
 # data voor top 3
-df_existing_top3 = load_sheet_data("LeutigsteDeelnemer_2026")
-sheet_top3 = client.open("Jury_beoordelingen_2026_v1").worksheet("LeutigsteDeelnemer_2026")
-# data voor uitslag
-sheet = client.open("Jury_beoordelingen_2026_v1").worksheet("Beoordelingen_2026")
+# df_existing_top3 = load_sheet_data("LeutigsteDeelnemer_2026")
+# sheet_top3 = client.open("Jury_beoordelingen_2026_v1").worksheet("LeutigsteDeelnemer_2026")
+# # data voor uitslag
+# sheet = client.open("Jury_beoordelingen_2026_v1").worksheet("Beoordelingen_2026")
 
 def split_categorie_nummer_titel_vereniging(combinatie):
     try: 
@@ -322,8 +332,11 @@ def beoordeling_categorie_jurylid(categorie, jurylid, sheet_name="Beoordelingen_
     # criteria = ['Idee', 'Bouwtechnisch', 'Afwerking', 'Carnavalesk', 'Actie']
     
     # Bestaande beoordelingen ophalen 
-    sheet = client.open("Jury_beoordelingen_2026_v1").worksheet(sheet_name)
-    df_existing_beoordeling = load_sheet_data(sheet_name)
+    # sheet = client.open("Jury_beoordelingen_2026_v1").worksheet(sheet_name)
+    # df_existing_beoordeling = load_sheet_data(sheet_name)
+    
+    sheet = st.session_state.sheet_beoordelingen
+    df_existing_beoordeling = st.session_state.df_beoordelingen_cache
   
     # Filter programma op categorie
     df_tab = programma_df[programma_df['categorie'].str.contains(categorie, case=False, na=False)]
@@ -399,9 +412,6 @@ def beoordeling_categorie_jurylid(categorie, jurylid, sheet_name="Beoordelingen_
                         return int(editor_df.loc[editor_df["Criterium"] == c, "Beoordeling (1-10)"].values[0])
                     return 0
                 
-                is_groepenjury_op_wagen = (st.session_state['soort'] == 'g' and "w" in categorie)
-                if is_groepenjury_op_wagen:
-                    st.info("Als groepenjury beoordeel je bij wagens enkel het criterium **Carnavalesk**.")
                 # Dictionary aanmaken van alle scores
                 new_row = {
                     "Jurylid": jurylid,
@@ -417,12 +427,14 @@ def beoordeling_categorie_jurylid(categorie, jurylid, sheet_name="Beoordelingen_
                     "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
                 
                 st.session_state['pending_saves'].append(new_row)
-                st.warning(f'✅ Nieuwe beoordeling toegevoegd aan wachtrij ({titel}). ! Let op: nog net definitief opgeslagen, dat moet vanonderen !')
+                st.warning(f'✅ Nieuwe beoordeling toegevoegd aan wachtrij ({nummer}). ! Let op: nog net definitief opgeslagen, dat moet onderin !')
     if st.session_state['pending_saves']:
         st.info(f"📦 {len(st.session_state['pending_saves'])} beoordelingen klaar om te uploaden")
         if st.button('📤 Alles opslaan naar Google Sheet'):
             try:
-                df_existing_beoordeling = load_sheet_data(sheet_name)
+                # df_existing_beoordeling = load_sheet_data(sheet_name)
+                df_existing_beoordeling = st.session_state.df_beoordelingen_cache
+                sheet = st.session_state.sheet_beoordelingen
                 to_append = [] # nieuwe rijen verzamelen
                 updates = [] # bestaande rijen (row_index, values)
                 for row in st.session_state['pending_saves']:
@@ -450,8 +462,18 @@ def beoordeling_categorie_jurylid(categorie, jurylid, sheet_name="Beoordelingen_
                 for row_index, values in updates:
                     sheet.update(f"A{row_index}:J{row_index}", [values], value_input_option="USER_ENTERED")
                 st.success(f"{len(st.session_state['pending_saves'])} beoordeling(en) succesvol opgeslagen!")
+                
+                if st.session_state.pending_saves:
+                    new_df = pd.DataFrame(
+                        st.session_state.pending_saves,
+                        columns=st.session_state.df_beoordelingen_cache.columns)
+                    
+                    st.session_state.df_beoordelingen_cache = pd.concat(
+                        [st.session_state.df_beoordelingen_cache, new_df],
+                        ignore_index=True)
+                
                 st.session_state['pending_saves'].clear() # leegmaken na opslaan
-                load_sheet_data.clear() # cache verversen/vernieuwen
+                # load_sheet_data.clear() # cache verversen/vernieuwen
             except Exception as e:
                     st.error(f"❌ Fout bij opslaan: {e}")
     # ------- 
