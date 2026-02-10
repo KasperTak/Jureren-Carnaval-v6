@@ -257,8 +257,8 @@ def df_to_excel_colored(df):
     return output
  #%% --- spul voor top-3 bepaling
 # data voor top 3
-# df_existing_top3 = load_sheet_data("LeutigsteDeelnemer_2026")
-# sheet_top3 = client.open("Jury_beoordelingen_2026_v1").worksheet("LeutigsteDeelnemer_2026")
+df_existing_top3 = load_sheet_data("LeutigsteDeelnemer_2026")
+sheet_top3 = client.open("Jury_beoordelingen_2026_v1").worksheet("LeutigsteDeelnemer_2026")
 # # data voor uitslag
 # sheet = client.open("Jury_beoordelingen_2026_v1").worksheet("Beoordelingen_2026")
 
@@ -661,6 +661,7 @@ else:
     
     if st.session_state['active_tab'] == "Uitslag":
         st.header("🧮 Uitslag berekenen")
+        sheet = client.open("Jury_beoordelingen_2026_v1").worksheet("Beoordelingen_2026")
         records = sheet.get_all_records() # normale beoordelingen
         records_top_3 = sheet_top3.get_all_records() #leutigste deelnemer
         df_top_3 = pd.DataFrame(records_top_3) # leutigste deelnemer
