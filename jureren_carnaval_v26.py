@@ -550,7 +550,7 @@ else:
         f"{str(row['titel']).strip() if pd.notna(row['titel']) and str(row['titel']).strip() != '' else 'Zonder titel'}"
         for _, row in programma_df.iterrows()
                             ]  
-    st.title("Jury carnavalsoptocht Sas van Gent")
+    st.title(''':rainbow[Jury carnavalsoptocht Sas van Gent]''')
 
     if st.session_state['active_tab'] not in tabs_total:
         st.session_state['active_tab'] = 'Home'
