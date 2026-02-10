@@ -74,7 +74,7 @@ def load_sheet_data(sheet_name):
 
 # google sheets 1x per sessie openen
 if st.session_state.sheet_beoordelingen is None:
-    st.session_state.sheet_beoordelinen = (client.open("Jury_beoordelinen_2026_v1").worksheet("Beoordelingen_2026"))
+    st.session_state.sheet_beoordelinen = (client.open("Jury_beoordelingen_2026_v1").worksheet("Beoordelingen_2026"))
 if st.session_state.df_beoordelingen_cache is None:
     st.session_state.df_beoordelingen_cache = load_sheet_data("Beoordelingen_2026")
 #%%
@@ -814,5 +814,6 @@ else:
         else:
             st.info("⏳ Wacht op alle juryleden, of vink 'forceren' aan om toch te berekenen.")
     
+
 
 
