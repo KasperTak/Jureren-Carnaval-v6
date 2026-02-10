@@ -733,7 +733,9 @@ else:
         
         # ---------------------- voortgang in % per jurylid-------------------
         totaal_deelnemers = len(alle_deelnemers)
-        st.write(f"totaal aantal deelnemers: {totaal_deelnemers}")
+        # st.write(f"totaal aantal deelnemers: {totaal_deelnemers}")
+        st.write(''':grey-background[In dit tabblad wordt eerst de voortgang per jurylid weergegeven. Wanneer dit compleet is (100%) kan de uitslag berekend worden.
+                 Ook kunnen de combinaties van *jurylid* met *onbeoordeelde deelnemer* weergegeven worden om inzicht te krijgen welk jurylid nog beoordelingen mist.] ''')
         
         st.subheader("Voortgang per jurylid", divider = 'red')
         
@@ -749,7 +751,7 @@ else:
         
         # --------------------- Toon ontbrekende combi's (max 10)----------------------
         MAX_TONEN = 10
-        st.subheader(''':blue[Ontbrekende beoordelingen (eerste 10)]''')
+        st.subheader(''':red[Ontbrekende beoordelingen (eerste 10)]''')
         
         if ontbrekend.empty:
             st.success("✅ Alle juryleden hebben hun beoordelingen afgerond!")
@@ -765,7 +767,8 @@ else:
                 st.caption(
                     f"- en nog {len(ontbrekend) - MAX_TONEN} ontbrekende beoordelingen.")
                     
-            
+        
+        st.subheader(f" ", divider = 'green')
         # Forceerbare berekening
         forceer = st.checkbox("💥 Forceren (ook als nog niet alles is ingeleverd)")
         
