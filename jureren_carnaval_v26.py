@@ -712,7 +712,7 @@ else:
         alle_juryleden = [j for j in st.secrets["users"].keys() if not j.startswith("admin")]
         
         # -------------------------- controle: ontbrekende beoordelingen-----------------------
-        alle_deelnemers = (programma_df[['Nr.', 'Vereniging', 'Titel']].drop_duplicates().sort_values('Nr.'))
+        alle_deelnemers = (programma_df[['Nr.', 'vereniging', 'titel']].drop_duplicates().sort_values('Nr.'))
         beoordeeld = df_beoordelingen[['Jurylid', 'Nr.']].drop_duplicates()
         
         verwacht = (pd.MultiIndex().from_product([alle_juryleden, alle_deelnemers["Nr."]],
@@ -741,7 +741,7 @@ else:
             for jurylid, groep in ontbrekend.groupby("Jurylid"):
                 st.markdown(f"**{jurylid} mist nog beoordelingen voor:**")
                 for _, row in groep.iterrows():
-                    st.write(f" Nr. {row['Nr.']} | {row['Vereniging']} | ({row['Titel']})")
+                    st.write(f" Nr. {row['Nr.']} | {row['vereniging']} | ({row['titel']})")
                     
             
         # Forceerbare berekening
