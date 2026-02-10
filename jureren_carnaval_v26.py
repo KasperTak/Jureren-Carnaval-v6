@@ -847,8 +847,8 @@ else:
             
             
     if st.session_state['active_tab'] == "Secretariaat":
-        st.subheader("**Secretariaat: volledige beoordelingen**")
-        st.write(''':blue[Hier kan de volledige beoordeling worden gedownload en vervolgens worden geüpload om nieuwe uitslag te creëeren.]''')
+        st.subheader(''':blue[**Secretariaat: volledige beoordelingen**]''')
+        st.write(''':blue[Hier kan de volledige beoordeling worden gedownload en vervolgens worden geüpload om nieuwe uitslag te berekenen.]''')
         
         # ------------------------ Normale beoordelingen -------------------------------
         st.space("small")
@@ -905,10 +905,9 @@ else:
             except Exception as e:
                 st.error(f"Fout bij upload: {e}")
       
-        st.subheader(f"  ",divider="red")
+        st.subheader(divider="red")
         st.badge("Let op: wijzigingen hier **overschrijven de jury-invoer**."
                 "Na upload kun je direct naar het tabblad **Uitslag** om opnieuw te berekenen.", color='violet')
         
-
 
 
