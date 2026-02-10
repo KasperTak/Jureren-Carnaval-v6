@@ -366,6 +366,7 @@ def beoordeling_categorie_jurylid(categorie, jurylid, sheet_name="Beoordelingen_
         titel = str(row['titel']).strip() if pd.notna(row['titel']) else "Zonder titel"
         st.divider()
         st.markdown(f"#### {nummer}🎭 **{vereniging}** — *{titel}* ")
+        st.caption(''':red[Let op: eerst beoordeling toevoegen aan wachtrij (en opslaan naar Google Sheet) voordat je doorgaat naar de volgende deelnemer!] ''')
 
         # --- Logica voor welke criteria getoond worden ---
         if is_groepenjury_op_wagen:
@@ -466,7 +467,7 @@ def beoordeling_categorie_jurylid(categorie, jurylid, sheet_name="Beoordelingen_
                     if not df_existing_beoordeling.empty and mask.any():
                         row_index = mask[mask].index[0] + 2
                         updates.append((row_index, list(row.values())))
-                        # updates.update(f"A{row_index}:J{row_index}", [list(new_row.values())])
+                        # updates.update(f"A{row_index}:K{row_index}", [list(new_row.values())])
                     else:
                         to_append.append(list(row.values()))
                         # st.success(f"✅ Nieuwe beoordeling opgeslagen voor {titel}")
@@ -477,7 +478,7 @@ def beoordeling_categorie_jurylid(categorie, jurylid, sheet_name="Beoordelingen_
                         for r in to_append:
                             sheet.append_row(r, value_input_option="USER_ENTERED")
                 for row_index, values in updates:
-                    sheet.update(f"A{row_index}:J{row_index}", [values], value_input_option="USER_ENTERED")
+                    sheet.update(f"A{row_index}:K{row_index}", [values], value_input_option="USER_ENTERED")
                 st.success(f"{len(st.session_state['pending_saves'])} beoordeling(en) succesvol opgeslagen!")
                 
                 if st.session_state.pending_saves:
@@ -687,7 +688,7 @@ else:
         
                         if not df_existing_top3.empty and mask.any():
                             row_index = mask[mask].index[0] + 2
-                            sheet_top3.update(f"A{row_index}:F{row_index}", [list(new_row.values())], value_input_option="USER_ENTERED")
+                            sheet_top3.update(f"A{row_index}:G{row_index}", [list(new_row.values())], value_input_option="USER_ENTERED")
                             st.info(f"🔁 Top-3 bijgewerkt voor {jurylid}")
                         else:
                             sheet_top3.append_row(list(new_row.values()), value_input_option="USER_ENTERED")
@@ -975,6 +976,5 @@ else:
         st.badge("Let op: wijzigingen hier **overschrijven de jury-invoer**."
                 "Na upload kun je direct naar het tabblad **Uitslag** om opnieuw te berekenen.", color='violet')
         
-
 
 
