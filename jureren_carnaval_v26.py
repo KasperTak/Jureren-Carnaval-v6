@@ -713,7 +713,8 @@ else:
         
         # -------------------------- controle: ontbrekende beoordelingen-----------------------
         alle_deelnemers = (programma_df[['Nr.', 'vereniging', 'titel']].drop_duplicates().sort_values('Nr.'))
-        beoordeeld = df_beoordelingen[['Jurylid', 'Nr.']].drop_duplicates()
+        beoordeeld = df_beoordelingen[['Jurylid', 'Deelnemer_nummer']].drop_duplicates()
+        beoordeeld = beoordeeld.rename(columns={'Deelnemer_nummer': "Nr."})
         
         verwacht = (pd.MultiIndex().from_product([alle_juryleden, alle_deelnemers["Nr."]],
                                                  names=['Jurylid', 'Nr.']
