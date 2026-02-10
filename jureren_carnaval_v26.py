@@ -493,7 +493,7 @@ else:
     alle_titels_met_vereniging = [
         f"{str(row['categorie']).strip()} | "
         f"{str(row['Nr.']).strip()} - "
-        f"{str(row['Vereniging']).strip() if pd.notna(row['vereniging']) and str(row['vereniging']).strip() != '' else 'Onbekend'} ~ "
+        f"{str(row['vereniging']).strip() if pd.notna(row['vereniging']) and str(row['vereniging']).strip() != '' else 'Onbekend'} ~ "
         f"{str(row['titel']).strip() if pd.notna(row['titel']) and str(row['titel']).strip() != '' else 'Zonder titel'}"
         for _, row in programma_df.iterrows()
                             ]  
@@ -780,6 +780,7 @@ else:
         else:
             st.info("⏳ Wacht op alle juryleden, of vink 'forceren' aan om toch te berekenen.")
     
+
 
 
 
