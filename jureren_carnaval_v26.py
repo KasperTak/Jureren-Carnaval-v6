@@ -905,7 +905,7 @@ else:
             except Exception as e:
                 st.error(f"Fout bij upload: {e}")
       
-        st.divider("red")
+        st.subheader(divider="red")
         st.badge("Let op: wijzigingen hier **overschrijven de jury-invoer**."
                 "Na upload kun je direct naar het tabblad **Uitslag** om opnieuw te berekenen.", color='violet')
         
