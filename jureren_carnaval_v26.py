@@ -324,7 +324,7 @@ def beoordeling_categorie_jurylid(categorie, jurylid, sheet_name="Beoordelingen_
     # pending_saves = []
     
     for i, row in df_tab.iterrows():
-        nummer = str(row['nr.']).strip() if pd.notna(row['nr.']) else "Nummer onbekend"
+        nummer = str(row['Nr.']).strip() if pd.notna(row['Nr.']) else "Nummer onbekend"
         vereniging = str(row['vereniging']).strip() if pd.notna(row['vereniging']) else "Onbekend"
         titel = str(row['titel']).strip() if pd.notna(row['titel']) else "Zonder titel"
         st.divider()
@@ -780,7 +780,5 @@ else:
         else:
             st.info("⏳ Wacht op alle juryleden, of vink 'forceren' aan om toch te berekenen.")
     
-
-
 
 
