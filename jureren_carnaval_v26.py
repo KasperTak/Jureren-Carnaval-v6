@@ -86,12 +86,12 @@ if st.session_state.sheet_top3 is None:
 if st.session_state.df_top3_cache is None:
     st.session_state.df_top3_cache = load_sheet_data("LeutigsteDeelnemer_2026")
 #%%
-def mail_excel(excel_bytes_1, filename_1, excel_bytes_2, filename_2):
+def mail_excel(excel_bytes_1, filename_1, excel_bytes_2, filename_2, CC):
     msg = EmailMessage()
     msg["Subject"] = "Uitslag carnavalsoptocht Sas van Gent (Betekoppen) 2026 [geautomatiseerde mail]"
     msg["From"] = st.secrets["email"]["from"]
     msg["To"] = st.secrets["email"]["to"]
-    msg["Cc"] = "kasper.tak12@gmail.com" 
+    msg["Cc"] = "kasper.tak12@gmail.com" , CC
     
     msg.set_content(
         "Beste, \n\nAlle onderdelen zijn beoordeeld door de juryleden.\n"
@@ -868,6 +868,9 @@ else:
             if st.session_state.uitslag_berekend:
                 st.success("Uitslag is berekend")
                 
+                st.subheader(f" ", divider='blue')
+                st.write(''':blue-background[Hieronder zijn twee downloadknoppen. Hiermee kunnen het rapport en de persuitslag worden gedownload.]''')
+                
                 if st.session_state.Rapport_excel is None:
                     st.session_state.Rapport_excel = df_to_excel_rapport(st.session_state.df_rapport)
                 st.download_button("Download rapport naar Excel", data = st.session_state.Rapport_excel, file_name="uitslag_rapport.xlsx", 
@@ -895,9 +898,13 @@ else:
                 #     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                 
             if st.session_state.uitslag_berekend:
+                st.subheader(f" ", divider='violet')
+                mailadres = st.text_input("","Mailadres")
+                st.write(f''':violet-background[Beide bestanden (rapport & persuitslag) worden verstuurd naar het mailadres: {mailadres}''')
                 if st.button("Verstuur rapport via mail"):
                     mail_excel(st.session_state.Rapport_excel, "Volledig_rapport_uitslag.xlsx",
-                               st.session_state.Pers_excel, "Persuitslag.xlsx")
+                               st.session_state.Pers_excel, "Persuitslag.xlsx",
+                               mailadres)
                     st.session_state.mail_verzonden = True
                     st.success("Mail succesvol verzonden!")
                 
