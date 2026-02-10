@@ -847,11 +847,11 @@ else:
             
             
     if st.session_state['active_tab'] == "Secretariaat":
-        st.header("Secretariaat: volledige beoordelingen")
-        st.write("Hier kan de volledige beoordeling worden gedownload en vervolgens worden geüpload om nieuwe uitslag te creëeren.")
+        st.subheader("**Secretariaat: volledige beoordelingen**")
+        st.write(''':blue[Hier kan de volledige beoordeling worden gedownload en vervolgens worden geüpload om nieuwe uitslag te creëeren.]''')
         
         # ------------------------ Normale beoordelingen -------------------------------
-        st.subheader("Jurybeoordelingen (punten per criterium)")
+        st.subheader("Jurybeoordelingen (punten per criterium)", divider=True)
         
         excel_buffer_beoordelingen = df_to_excel_generic(st.session_state.df_beoordelingen_cache, sheet_name="Beoordelingen")
         
@@ -876,9 +876,9 @@ else:
             except Exception as e:
                 st.error(f"Fout bij upload: {e}")
         
-        st.divider()
+        # st.divider()
         # ------------------------ Leutigste Deelnemer -------------------------------
-        st.subheader("Leutigste Deelnemer (top-3 per jurylid)")
+        st.subheader("Leutigste Deelnemer (top-3 per jurylid)", divider=True)
         
         excel_buffer_top3 = df_to_excel_generic(st.session_state.df_top3_cache, sheet_name="LeutigsteDeelnemer")
         
