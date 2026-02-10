@@ -36,8 +36,11 @@ def init_session():
         "active_tab": "Home",
         "pending_saves": [],
         
-        "df_beoordelingen_cache": None,
-        "sheet_beoordelingen": None,
+        "df_beoordelingen_cache": None, # alg. beoordelingen
+        "sheet_beoordelingen": None, # alg. beoordelingen
+        
+        "df_top3_cache": None, # leutigste deelnemer
+        "sheet_top3": None,
         
         "uitslag_berekend" : False,
         "df_rapport" : None,
@@ -77,6 +80,11 @@ if st.session_state.sheet_beoordelingen is None:
     st.session_state.sheet_beoordelingen = (client.open("Jury_beoordelingen_2026_v1").worksheet("Beoordelingen_2026"))
 if st.session_state.df_beoordelingen_cache is None:
     st.session_state.df_beoordelingen_cache = load_sheet_data("Beoordelingen_2026")
+    
+if st.session_state.sheet_top3 is None:
+    st.session_state.sheet_top3 = (client.open("Jury_beoordelingen_2026_v1").worksheet("LeutigsteDeelnemer_2026"))
+if st.session_state.df_top3_cache is None:
+    st.session_state.df_top3_cache = load_sheet_data("LeutigsteDeelnemer_2026")
 #%%
 def mail_excel(excel_bytes_1, filename_1, excel_bytes_2, filename_2):
     msg = EmailMessage()
@@ -105,7 +113,15 @@ def mail_excel(excel_bytes_1, filename_1, excel_bytes_2, filename_2):
             st.secrets["email"]["from"],
             st.secrets["email"]["app_password"])
         smtp.send_message(msg, to_addrs=[msg["To"], msg["Cc"]])
-#%%
+#%% df to excel defs
+def df_to_excel_generic(df, sheet_name):
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name=sheet_name)
+    output.seek(0)
+    return output
+
+
 def df_to_excel_rapport(df):
     output = BytesIO()
     wb = Workbook()
@@ -256,9 +272,9 @@ def df_to_excel_colored(df):
     
     return output
  #%% --- spul voor top-3 bepaling
-# data voor top 3
-df_existing_top3 = load_sheet_data("LeutigsteDeelnemer_2026")
-sheet_top3 = client.open("Jury_beoordelingen_2026_v1").worksheet("LeutigsteDeelnemer_2026")
+# # data voor top 3
+# df_existing_top3 = load_sheet_data("LeutigsteDeelnemer_2026")
+# sheet_top3 = client.open("Jury_beoordelingen_2026_v1").worksheet("LeutigsteDeelnemer_2026")
 # # data voor uitslag
 # sheet = client.open("Jury_beoordelingen_2026_v1").worksheet("Beoordelingen_2026")
 
@@ -511,6 +527,8 @@ else:
     tab_home = ['Home']
     tab_categories = []
     tab_last = ['Leutigste Deelnemer', 'Uitslag']
+    if st.session_state['soort'] == 'admin':
+        tab_last.append("Secretariaat")
     
     if st.session_state['soort'] == 'w': 
         # wagenjury: alles behalve groepen
@@ -602,7 +620,11 @@ else:
         st.header("Leutigste Deelnemer")
         st.write("Vul hier jouw top-3 deelnemers in voor *De leutigste deelnemer*. Let op: jouw ingevulde top-3 is definitief en kan niet zomaar aangepast worden!")
         # Filter bestaande keuzes van dit jurylid
+        # bestaande_keuzes = df_existing_top3[df_existing_top3["Jurylid"] == jurylid]
+        sheet_top3 = st.session_state.sheet_top3
+        df_existing_top3 = st.session_state.df_top3_cache
         bestaande_keuzes = df_existing_top3[df_existing_top3["Jurylid"] == jurylid]
+        
         if not bestaande_keuzes.empty:
             st.info("🟡 Eerdere top-3 gevonden:")
             bestaande_keuzes = bestaande_keuzes.sort_values("Punten", ascending=False)
@@ -661,11 +683,18 @@ else:
     
     if st.session_state['active_tab'] == "Uitslag":
         st.header("🧮 Uitslag berekenen")
-        sheet = client.open("Jury_beoordelingen_2026_v1").worksheet("Beoordelingen_2026")
-        records = sheet.get_all_records() # normale beoordelingen
-        records_top_3 = sheet_top3.get_all_records() #leutigste deelnemer
-        df_top_3 = pd.DataFrame(records_top_3) # leutigste deelnemer
-        df_beoordelingen = pd.DataFrame(records) # normale beoordelingen
+        
+        sheet = st.session_state.sheet_beoordelingen
+        df_existing_beoordeling = st.session_state.df_beoordelingen_cache.copy()
+        
+        sheet_top3 = st.session_state.sheet_top3
+        df_top_3 = st.session_state.df_top3_cache.copy()
+        # sheet = client.open("Jury_beoordelingen_2026_v1").worksheet("Beoordelingen_2026")
+        # records = sheet.get_all_records() # normale beoordelingen
+        # records_top_3 = sheet_top3.get_all_records() #leutigste deelnemer
+        # df_top_3 = pd.DataFrame(records_top_3) # leutigste deelnemer
+        
+        df_beoordelingen = df_existing_beoordeling.copy() # normale beoordelingen
         
         alle_juryleden = [j for j in st.secrets["users"].keys() if not j.startswith("admin")]
         
@@ -815,6 +844,67 @@ else:
                 
         else:
             st.info("⏳ Wacht op alle juryleden, of vink 'forceren' aan om toch te berekenen.")
-    
+            
+            
+    if st.session_state['active_tab'] == "Secretariaat":
+        st.header("Secretariaat: volledige beoordelingen")
+        st.write("Hier kan de volledige beoordeling worden gedownload en vervolgens worden geüpload om nieuwe uitslag te creëeren.")
+        
+        # ------------------------ Normale beoordelingen -------------------------------
+        st.subheader("Jurybeoordelingen (punten per criterium)")
+        
+        excel_buffer_beoordelingen = df_to_excel_generic(st.session_state.df_beoordelingen_cache, sheet_name="Beoordelingen")
+        
+        st.download_button(
+            label = "Download volledige beoordelingen",
+            data = excel_buffer_beoordelingen,
+            file_name = "Beoordelingen_volledig.xlsx",
+            mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        
+        uploaded_beoordelingen = st.file_uploader("Upload bijgewerkte beoordelingen", type = ["xlsx"], key="upload_beoordelingen")
+        
+        if uploaded_beoordelingen is not None:
+            try:
+                df_new = pd.read_excel(uploaded_beoordelingen)
+                expected_cols = st.session_state.df_beoordelingen_cache.columns.tolist()
+                if list(df_new.columns) != expected_cols:
+                    st.error(f"Kolommen komen niet overeen. Verwacht: {expected_cols}")
+                    st.code(expected_cols)
+                else:
+                    st.session_state.df_beoordelingen_cache = df_new
+                    st.success("Nieuwe beoordelingen succesvol ingeladen! Je kunt de uitslag berekenen.")
+            except Exception as e:
+                st.error(f"Fout bij upload: {e}")
+        
+        st.divider()
+        # ------------------------ Leutigste Deelnemer -------------------------------
+        st.subheader("Leutigste Deelnemer (top-3 per jurylid)")
+        
+        excel_buffer_top3 = df_to_excel_generic(st.session_state.df_top3_cache, sheet_name="LeutigsteDeelnemer")
+        
+        st.download_button(
+            label = "Download Leutigste Deelnemer beoordelingen",
+            data = excel_buffer_top3,
+            file_name = "LeutigsteDeelnemer_volledig.xlsx",
+            mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        
+        uploaded_top3= st.file_uploader("Upload bijgewerkte beoordelingen", type = ["xlsx"], key="upload_top3")
+        
+        if uploaded_top3 is not None:
+            try:
+                df_top3_new = pd.read_excel(uploaded_top3)
+                expected_cols_top3 = st.session_state.df_top3_cache.columns.tolist()
+                if list(df_top3_new.columns) != expected_cols_top3:
+                    st.error(f"Kolommen komen niet overeen. Verwacht: {expected_cols_top3}")
+                    st.code(expected_cols_top3)
+                else:
+                    st.session_state.df_top3_cache = df_top3_new 
+                    st.success("Nieuwe beoordelingen succesvol ingeladen! Je kunt de uitslag berekenen.")
+            except Exception as e:
+                st.error(f"Fout bij upload: {e}")
+                
+        st.info("Let op: wijzigingen hier **overschrijven de jury-invoer**."
+                "Na upload kun je direct naar het tabblad **Uitslag** om opnieuw te berekenen.")
+        
 
 
