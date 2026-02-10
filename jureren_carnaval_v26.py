@@ -74,7 +74,7 @@ def load_sheet_data(sheet_name):
 
 # google sheets 1x per sessie openen
 if st.session_state.sheet_beoordelingen is None:
-    st.session_state.sheet_beoordelinen = (client.open("Jury_beoordelingen_2026_v1").worksheet("Beoordelingen_2026"))
+    st.session_state.sheet_beoordelingen = (client.open("Jury_beoordelingen_2026_v1").worksheet("Beoordelingen_2026"))
 if st.session_state.df_beoordelingen_cache is None:
     st.session_state.df_beoordelingen_cache = load_sheet_data("Beoordelingen_2026")
 #%%
@@ -432,10 +432,10 @@ def beoordeling_categorie_jurylid(categorie, jurylid, sheet_name="Beoordelingen_
         st.info(f"📦 {len(st.session_state['pending_saves'])} beoordelingen klaar om te uploaden")
         if st.button('📤 Alles opslaan naar Google Sheet'):
             try:
-                sheet - client.open("Jury_beoordelingen_2026_v1").worksheet(sheet_name)
-                df_existing_beoordeling = load_sheet_data(sheet_name)
-                # df_existing_beoordeling = st.session_state.df_beoordelingen_cache
-                # sheet = st.session_state.sheet_beoordelingen
+                # sheet - client.open("Jury_beoordelingen_2026_v1").worksheet(sheet_name)
+                # df_existing_beoordeling = load_sheet_data(sheet_name)
+                df_existing_beoordeling = st.session_state.df_beoordelingen_cache
+                sheet = st.session_state.sheet_beoordelingen
                 to_append = [] # nieuwe rijen verzamelen
                 updates = [] # bestaande rijen (row_index, values)
                 for row in st.session_state['pending_saves']:
@@ -464,17 +464,17 @@ def beoordeling_categorie_jurylid(categorie, jurylid, sheet_name="Beoordelingen_
                     sheet.update(f"A{row_index}:J{row_index}", [values], value_input_option="USER_ENTERED")
                 st.success(f"{len(st.session_state['pending_saves'])} beoordeling(en) succesvol opgeslagen!")
                 
-                # if st.session_state.pending_saves:
-                #     new_df = pd.DataFrame(
-                #         st.session_state.pending_saves,
-                #         columns=st.session_state.df_beoordelingen_cache.columns)
+                if st.session_state.pending_saves:
+                    new_df = pd.DataFrame(
+                        st.session_state.pending_saves,
+                        columns=st.session_state.df_beoordelingen_cache.columns)
                     
-                #     st.session_state.df_beoordelingen_cache = pd.concat(
-                #         [st.session_state.df_beoordelingen_cache, new_df],
-                #         ignore_index=True)
+                    st.session_state.df_beoordelingen_cache = pd.concat(
+                        [st.session_state.df_beoordelingen_cache, new_df],
+                        ignore_index=True)
                 
                 st.session_state['pending_saves'].clear() # leegmaken na opslaan
-                load_sheet_data.clear() # cache verversen/vernieuwen
+                # load_sheet_data.clear() # cache verversen/vernieuwen
             except Exception as e:
                     st.error(f"❌ Fout bij opslaan: {e}")
     # ------- 
@@ -815,6 +815,5 @@ else:
         else:
             st.info("⏳ Wacht op alle juryleden, of vink 'forceren' aan om toch te berekenen.")
     
-
 
 
