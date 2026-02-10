@@ -900,7 +900,7 @@ else:
             if st.session_state.uitslag_berekend:
                 st.subheader(f" ", divider='violet')
                 mailadres = st.text_input("","Mailadres")
-                st.write(f''':violet-background[Beide bestanden (rapport & persuitslag) worden verstuurd naar het mailadres: {mailadres}''')
+                st.write(f''':violet-background[Beide bestanden (rapport & persuitslag) worden verstuurd naar het mailadres: {mailadres}]''')
                 if st.button("Verstuur rapport via mail"):
                     mail_excel(st.session_state.Rapport_excel, "Volledig_rapport_uitslag.xlsx",
                                st.session_state.Pers_excel, "Persuitslag.xlsx",
@@ -979,5 +979,6 @@ else:
         st.badge("Let op: wijzigingen hier **overschrijven de jury-invoer**."
                 "Na upload kun je direct naar het tabblad **Uitslag** om opnieuw te berekenen.", color='violet')
         
+
 
 
