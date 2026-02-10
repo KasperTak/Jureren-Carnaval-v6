@@ -851,7 +851,7 @@ else:
         st.write(''':blue[Hier kan de volledige beoordeling worden gedownload en vervolgens worden geüpload om nieuwe uitslag te creëeren.]''')
         
         # ------------------------ Normale beoordelingen -------------------------------
-        st.subheader("Jurybeoordelingen (punten per criterium)", divider=True)
+        st.subheader("Jurybeoordelingen (punten per criterium)", divider="green", text_alignment="center")
         
         excel_buffer_beoordelingen = df_to_excel_generic(st.session_state.df_beoordelingen_cache, sheet_name="Beoordelingen")
         
@@ -861,7 +861,7 @@ else:
             file_name = "Beoordelingen_volledig.xlsx",
             mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         
-        uploaded_beoordelingen = st.file_uploader("Upload bijgewerkte beoordelingen", type = ["xlsx"], key="upload_beoordelingen")
+        uploaded_beoordelingen = st.file_uploader("*Upload bijgewerkte beoordelingen*", type = ["xlsx"], key="upload_beoordelingen")
         
         if uploaded_beoordelingen is not None:
             try:
@@ -878,7 +878,7 @@ else:
         
         # st.divider()
         # ------------------------ Leutigste Deelnemer -------------------------------
-        st.subheader("Leutigste Deelnemer (top-3 per jurylid)", divider=True)
+        st.subheader("Leutigste Deelnemer (top-3 per jurylid)", divider="green", text_alignment="center")
         
         excel_buffer_top3 = df_to_excel_generic(st.session_state.df_top3_cache, sheet_name="LeutigsteDeelnemer")
         
@@ -888,7 +888,7 @@ else:
             file_name = "LeutigsteDeelnemer_volledig.xlsx",
             mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         
-        uploaded_top3= st.file_uploader("Upload bijgewerkte beoordelingen", type = ["xlsx"], key="upload_top3")
+        uploaded_top3= st.file_uploader("*Upload bijgewerkte beoordelingen*", type = ["xlsx"], key="upload_top3")
         
         if uploaded_top3 is not None:
             try:
@@ -903,8 +903,8 @@ else:
             except Exception as e:
                 st.error(f"Fout bij upload: {e}")
                 
-        st.info("Let op: wijzigingen hier **overschrijven de jury-invoer**."
-                "Na upload kun je direct naar het tabblad **Uitslag** om opnieuw te berekenen.")
+        st.badge("Let op: wijzigingen hier **overschrijven de jury-invoer**."
+                "Na upload kun je direct naar het tabblad **Uitslag** om opnieuw te berekenen.", color='violet')
         
 
 
