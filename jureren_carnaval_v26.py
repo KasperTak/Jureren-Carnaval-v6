@@ -747,17 +747,23 @@ else:
             else:
                 st.info(f"⏳ {jurylid}: {percentage}% compleet")
         
-        # # Toon status
-        # st.subheader(''':blue[Status juryleden]''')
-        # if ontbrekend.empty:
-        #     st.success("✅ Alle juryleden hebben hun beoordelingen ingeleverd!")
-        # else:
-        #     st.warning("⚠️ Niet alle juryleden hebben hun beoordelingen afgerond.")
+        # --------------------- Toon ontbrekende combi's (max 10)----------------------
+        MAX_TONEN = 10
+        st.subheader(''':blue[Ontbrekende beoordelingen (eerste 10)]''')
+        
+        if ontbrekend.empty:
+            st.success("✅ Alle juryleden hebben hun beoordelingen afgerond!")
+        else:
+            te_tonen = ontbrekend.head(MAX_TONEN)
+            for _, row in te_tonen.iterrows():
+                st.write(
+                    f"- **{row['Jurylid']}** → "
+                    f"{row['Nr.']} | {row['vereniging']} ({row['titel']})"
+                    )
             
-        #     for jurylid, groep in ontbrekend.groupby("Jurylid"):
-        #         st.markdown(f"**{jurylid} mist nog beoordelingen voor:**")
-        #         for _, row in groep.iterrows():
-        #             st.write(f" Nr. {row['Nr.']} | {row['vereniging']} | ({row['titel']})")
+            if len(ontbrekend) > MAX_TONEN:
+                st.caption(
+                    f"- en nog {len(ontbrekend) - MAX_TONEN} ontbrekende beoordelingen.")
                     
             
         # Forceerbare berekening
