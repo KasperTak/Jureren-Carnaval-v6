@@ -369,23 +369,19 @@ def beoordeling_categorie_jurylid(categorie, jurylid, sheet_name="Beoordelingen_
         st.caption(''':red[Let op: eerst beoordeling toevoegen aan wachtrij (en opslaan naar Google Sheet) voordat je doorgaat naar de volgende deelnemer!] ''')
 
         # --- Logica voor welke criteria getoond worden ---
-        if is_groepenjury_op_wagen:
-            criteria = ["Carnavalesk"]
-        else:
-            criteria = ["Idee", "Bouwtechnisch", "Afwerking", "Carnavalesk", "Actie"]
+        is_wagen = "WAGEN" in categorie.upper()
         
-        # ## als categorie Groepen (A/B/C) is en soort_jury is jury_g: dan ook Carnavalesk
-        # if "G" in categorie and st.session_state['soort'] == 'g':
-        #     criteria = ["Idee", "Bouwtechnisch", "Afwerking", "Carnavalesk", "Actie"]
-        # ## als categorie Wagens (A/B) en soort_jury is jury_g: dan ALLEEN Carnavalesk
-        # elif "W" in categorie and st.session_state['soort'] == 'g':
-        #     criteria = ["Carnavalesk"]
-        # ## als categorie Wagens en soort_jury is jury_w: dan ALLES criteria
-        # elif "W" in categorie: #and st.session_state['soort'] == 'w':
-        #     criteria = ["Idee", "Bouwtechnisch", "Afwerking", "Carnavalesk", "Actie"]
-        # ## anders, (dus bij T&K en E&D), ook Carnavalesk
-        # else:
-        #     criteria = ["Idee", "Bouwtechnisch", "Afwerking", "Carnavalesk", "Actie"]
+        if is_wagen:
+            if is_groepenjury:
+                # Groepenjury bij wagens: alleen Carnavalesk
+                criteria = ['Carnavalesk']
+            else:
+                # Wagenjury bij wagens: alle criteria
+                criteria = ["Idee", "Bouwtechnisch", "Afwerking", "Carnavalesk", "Actie"]
+        else:
+            # Geen wagens -> nooit Carnavalesk
+            criteria = ["Idee", "Bouwtechnisch", "Afwerking", "Actie"]
+        
         
         # Controleren op dit jurylid deze deelnemer al heeft beoordeeld
         mask = (
@@ -436,11 +432,11 @@ def beoordeling_categorie_jurylid(categorie, jurylid, sheet_name="Beoordelingen_
                     "Deelnemer_nummer": nummer,
                     "Deelnemer_vereniging": vereniging,
                     "Deelnemer_titel": titel,
-                    "Idee": 0 if is_groepenjury_op_wagen else get_score("Idee"),
-                    "Bouwtechnisch":0 if is_groepenjury_op_wagen else get_score("Bouwtechnisch"),
-                    "Afwerking": 0 if is_groepenjury_op_wagen else get_score("Afwerking"),
-                    "Carnavalesk": get_score("Carnavalesk"),
-                    "Actie": 0 if is_groepenjury_op_wagen else get_score("Actie"),
+                    "Idee": get_score("Idee") if "Idee" in criteria else 0,
+                    "Bouwtechnisch": get_score("Bouwtechnisch") if "Bouwtechnisch" in criteria else 0,
+                    "Afwerking": get_score("Afwerking") if "Afwerking" in criteria else 0,
+                    "Carnavalesk": get_score("Carnavalesk") if "Carnavalesk" in criteria else 0,
+                    "Actie": get_score("Actie") if "Actie" in criteria else 0,
                     "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
                 
                 st.session_state['pending_saves'].append(new_row)
