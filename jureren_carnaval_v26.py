@@ -466,7 +466,8 @@ else:
         df = pd.read_excel("Programma stoetopstellers 2026.xlsx", nrows=61)
         return df
     programma_df = load_programma()
-    programma_df = programma_df.iloc[:, :11] # tot kolom P (16e)
+    programma_df = programma_df.iloc[:, :11] # tot kolom K (11e)
+    programma_df  = programma_df.rename(columns={'nr.': 'Nr.'})
     programma_df = programma_df.dropna(how='all') # alle lege rijen verwijderen
     programma_df = programma_df[programma_df['categorie'].notna() & programma_df['aantal deelnemers'].notna()].reset_index(drop=True) # alleen data met iets in Categorie en iets in Aantal Deelnemers
 
@@ -491,7 +492,7 @@ else:
     # voor tabblad met top-3
     alle_titels_met_vereniging = [
         f"{str(row['categorie']).strip()} | "
-        f"{str(row['Nr.']).strip()} - "
+        f"{str(row['nr.']).strip()} - "
         f"{str(row['Vereniging']).strip() if pd.notna(row['vereniging']) and str(row['vereniging']).strip() != '' else 'Onbekend'} ~ "
         f"{str(row['titel']).strip() if pd.notna(row['titel']) and str(row['titel']).strip() != '' else 'Zonder titel'}"
         for _, row in programma_df.iterrows()
@@ -570,8 +571,8 @@ else:
         if not bestaande_keuzes.empty:
             st.info("🟡 Eerdere top-3 gevonden:")
             bestaande_keuzes = bestaande_keuzes.sort_values("Punten", ascending=False)
-            bestaande_keuzes_voor_display = bestaande_keuzes[["Nummer","Vereniging", "Titel", "Punten"]]
-            bestaande_keuzes_voor_display.columns = ["Nummer" ,"Vereniging", "Titel", "Punten"]
+            bestaande_keuzes_voor_display = bestaande_keuzes[["Nr.","Vereniging", "Titel", "Punten"]]
+            bestaande_keuzes_voor_display.columns = ["Nr." ,"Vereniging", "Titel", "Punten"]
             bestaande_keuzes_voor_display.index = range(1, len(bestaande_keuzes_voor_display) + 1)
             bestaande_keuzes_voor_display.index.name = "Ranking"
             st.table(bestaande_keuzes_voor_display)
@@ -602,12 +603,12 @@ else:
                     for keuze, pnt in zip(top_keuzes, punten):
                         categorie, nummer, titel, vereniging = split_categorie_nummer_titel_vereniging(keuze)
         
-                        mask = (df_existing_top3['Jurylid'] == jurylid) & (df_existing_top3['Nummer'] == nummer)
+                        mask = (df_existing_top3['Jurylid'] == jurylid) & (df_existing_top3['Nr.'] == nummer)
         
                         new_row = {
                           "Jurylid": jurylid,
                           "Categorie": categorie,
-                          "Nummer": nummer,
+                          "Nr.": nummer,
                           "Titel": titel,
                           "Vereniging": vereniging,
                           "Punten": pnt,
@@ -657,20 +658,20 @@ else:
                 df_leutigste = df_top_3.iloc[1:]
                 df_leutigste["Categorie"] = df_leutigste["Categorie"].str.upper()
                 df = df.rename(columns={
-                                "Deelnemer_nummer":'Nummer',
+                                "Deelnemer_nummer":'Nr.',
                                 "Deelnemer_titel": "Titel",
                                 "Deelnemer_vereniging": "Vereniging"})
 
                 df_resultaten = df.copy()
                 # Eerst dataframe met alleen de uitslag per categorie. Geen uitslag voor carnavalesk
-                df_uitslag_categorien = df_resultaten.groupby(['Categorie', 'Nummer', 'Vereniging', 'Titel'])[kolommen_criteria].sum().reset_index()
+                df_uitslag_categorien = df_resultaten.groupby(['Categorie', 'Nr.', 'Vereniging', 'Titel'])[kolommen_criteria].sum().reset_index()
                 df_uitslag_categorien["Totaal punten"] = df_uitslag_categorien[kolommen_criteria].sum(axis=1)
                 # sorteren & plaats toevoegen
                 df_uitslag_categorien = df_uitslag_categorien.sort_values(by=['Categorie', 'Totaal punten'], ascending = [True, False]).reset_index(drop=True)
                 df_uitslag_categorien['Plaats'] = df_uitslag_categorien.groupby("Categorie").cumcount() + 1
                 df_uitslag_categorien['Beoordelingscriterium'] = 'Algemeen'
 
-                kolomvolgorde = ["Plaats","Categorie", "Beoordelingscriterium", "Nummer", "Vereniging", "Titel", "Idee", "Bouwtechnisch", "Afwerking", "Carnavalesk", "Actie", "Totaal punten"]
+                kolomvolgorde = ["Plaats","Categorie", "Beoordelingscriterium", "Nr.", "Vereniging", "Titel", "Idee", "Bouwtechnisch", "Afwerking", "Carnavalesk", "Actie", "Totaal punten"]
                 df_uitslag_categorien = df_uitslag_categorien[kolomvolgorde]
 
                 categorie_volgorde = ["WAGENS A", "WAGENS B", "WAGENS C", 
@@ -689,7 +690,7 @@ else:
                 df_rapport_carnavalesk = df_uitslag_carnavalesk.copy()
 
                 # Recap van Leutigste deelnemer
-                df_uitslag_leutigste = df_leutigste.groupby(["Nummer", "Vereniging", "Titel"])["Punten"].sum().reset_index()
+                df_uitslag_leutigste = df_leutigste.groupby(["Nr.", "Vereniging", "Titel"])["Punten"].sum().reset_index()
                 df_uitslag_leutigste = df_uitslag_leutigste.sort_values(by="Punten", ascending=False).reset_index(drop=True)
                 df_uitslag_leutigste["Plaats"] = range(1, len(df_uitslag_leutigste) + 1)
                 df_uitslag_leutigste["Beoordelingscriterium"] = "Leutigste Deelnemer"
@@ -711,7 +712,7 @@ else:
                 #                                         "vereniging": "Vereniging"})
                 # df_rapport_met_nummers = df_rapport.merge(df_nummers[["nr.", "Titel"]], on=["Titel"], how='left')
                 # df_rapport_met_nummers = df_rapport_met_nummers.rename(columns={"nr.": "Nr."})
-                kolommen_rapport_volgorde = ["Plaats", "Nummer", "Categorie", "Vereniging", "Titel", "Idee", "Bouwtechnisch", "Afwerking", "Carnavalesk", "Actie", "Totaal punten" ]
+                kolommen_rapport_volgorde = ["Plaats", "Nr.", "Categorie", "Vereniging", "Titel", "Idee", "Bouwtechnisch", "Afwerking", "Carnavalesk", "Actie", "Totaal punten" ]
                 
                 # met df_rapport ipv df_rapport_met_nummers, want nummers zitten er anno 10-02-26 al in.
                 df_rapport_met_nummers = df_rapport[kolommen_rapport_volgorde]
