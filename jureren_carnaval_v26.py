@@ -247,21 +247,24 @@ def load_sheet_data(sheet_name):
     df.columns = [c.strip() for c in df.columns]
     return df
 # data voor top 3
-df_existing_top3 = load_sheet_data("LeutigsteDeelnemer")
+df_existing_top3 = load_sheet_data("LeutigsteDeelnemer_2026")
 sheet_top3 = client.open("Jury_beoordelingen_2026_v1").worksheet("LeutigsteDeelnemer_2026")
 # data voor uitslag
 sheet = client.open("Jury_beoordelingen_2026_v1").worksheet("Beoordelingen_2026")
 
-def split_categorie_titel_vereniging(combinatie):
+def split_categorie_nummer_titel_vereniging(combinatie):
     try: 
-        categorie_part, rest = combinatie.split(" - ", 1)
-        titel_part, vereniging_part = rest.split(" ~ ", 1)
-        titel = titel_part.replace("**", "").strip()
+        categorie_part, rest = combinatie.split(" | ", 1)
+        nummer_part, rest = rest.split(" - ", 1)
+        vereniging_part, titel_part = rest.split(" ~ ", 1)
+        
         categorie = categorie_part.strip()
-        vereniging = vereniging_part.strip() if vereniging_part else "Onbekend"
-        return categorie, titel, vereniging
+        nummer = nummer_part.strip()
+        vereniging = vereniging_part.strip() if vereniging_part else "Onbekend"        
+        titel = titel_part.replace("**", "").strip() if titel_part else "Zonder titel"
+        return categorie, nummer, titel, vereniging
     except ValueError:
-        return None, combinatie.strip(), "Onbekend"
+        return "Onbekend", None, "Zonder titel", "Onbekend"
 #%%
 def login():
     st.markdown("""
@@ -378,11 +381,15 @@ def beoordeling_categorie_jurylid(categorie, jurylid, sheet_name="Beoordelingen_
         
         # Voeg opslaan toe aan buffer i.p.v. direct over te schrijven naar Google Sheets
         btn_key = f"btn_save_{i}_{jurylid}"
-        if st.button(f"💾 Voeg beoordeling toe aan wachtrij ({titel})", key=btn_key):
+        if st.button(f"💾 Voeg beoordeling toe aan wachtrij ({nummer})", key=btn_key):
                 def get_score(c):
                     if c in editor_df["Criterium"].values:
                         return int(editor_df.loc[editor_df["Criterium"] == c, "Beoordeling (1-10)"].values[0])
                     return 0
+                
+                is_groepenjury_op_wagen = (st.session_state['soort'] == 'g' and "w" in categorie)
+                if is_groepenjury_op_wagen:
+                    st.info("Als groepenjury beoordeel je bij wagens enkel het criterium **Carnavalesk**.")
                 # Dictionary aanmaken van alle scores
                 new_row = {
                     "Jurylid": jurylid,
@@ -390,15 +397,15 @@ def beoordeling_categorie_jurylid(categorie, jurylid, sheet_name="Beoordelingen_
                     "Deelnemer_nummer": nummer,
                     "Deelnemer_vereniging": vereniging,
                     "Deelnemer_titel": titel,
-                    "Idee": get_score("Idee"),
-                    "Bouwtechnisch": get_score("Bouwtechnisch"),
-                    "Afwerking": get_score("Afwerking"),
+                    "Idee": 0 if is_groepenjury_op_wagen else get_score("Idee"),
+                    "Bouwtechnisch":0 if is_groepenjury_op_wagen else get_score("Bouwtechnisch"),
+                    "Afwerking": 0 if is_groepenjury_op_wagen else get_score("Afwerking"),
                     "Carnavalesk": get_score("Carnavalesk"),
-                    "Actie": get_score("Actie"),
+                    "Actie": 0 if is_groepenjury_op_wagen else get_score("Actie"),
                     "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
                 
                 st.session_state['pending_saves'].append(new_row)
-                st.success(f'✅ Nieuwe beoordeling toegevoegd aan wachtrij ({titel})')
+                st.warning(f'✅ Nieuwe beoordeling toegevoegd aan wachtrij ({titel}). ! Let op: nog net definitief opgeslagen, dat moet vanonderen !')
     if st.session_state['pending_saves']:
         st.info(f"📦 {len(st.session_state['pending_saves'])} beoordelingen klaar om te uploaden")
         if st.button('📤 Alles opslaan naar Google Sheet'):
@@ -467,20 +474,26 @@ else:
     unique_categories = programma_df['categorie'].unique().tolist()
     tab_home = ['Home']
     tab_categories = []
-    tab_last = ['Top-3', 'Uitslag']
+    tab_last = ['Leutigste Deelnemer', 'Uitslag']
     
     if st.session_state['soort'] == 'w': 
-        tab_categories += [x for x in unique_categories if "groepen" not in x]                            
-    elif st.session_state['soort'] == 'g':       
-        tab_categories += [x for x in unique_categories if "groepen" in x]                     
+        # wagenjury: alles behalve groepen
+        tab_categories += [x for x in unique_categories if "groepen" not in x]
+                            
+    elif st.session_state['soort'] == 'g':  
+        # groepenjury: groepen + wagens
+        tab_categories += [x for x in unique_categories if "groepen" in x or "wagens" in x]   
     else:
+        # admin
         tab_categories = unique_categories
     tabs_total = tab_home + tab_categories + tab_last
   
     # voor tabblad met top-3
     alle_titels_met_vereniging = [
-        f"{str(row['categorie']).strip()} - {str(row['titel']).strip() if pd.notna(row['titel']) and str(row['titel']).strip() != '' else 'Zonder titel'} ~ "
-        f"{str(row['vereniging']).strip() if pd.notna(row['vereniging']) and str(row['vereniging']).strip() != '' else 'Onbekend'}"
+        f"{str(row['categorie']).strip()} | "
+        f"{str(row['Nr.']).strip()} - "
+        f"{str(row['Vereniging']).strip() if pd.notna(row['vereniging']) and str(row['vereniging']).strip() != '' else 'Onbekend'} ~ "
+        f"{str(row['titel']).strip() if pd.notna(row['titel']) and str(row['titel']).strip() != '' else 'Zonder titel'}"
         for _, row in programma_df.iterrows()
                             ]  
     st.title("Jury carnavalsoptocht Sas van Gent")
@@ -549,16 +562,16 @@ else:
             beoordeling_categorie_jurylid(categorie, jurylid)
     
 
-    if st.session_state['active_tab'] == "Top-3":
+    if st.session_state['active_tab'] == "Leutigste Deelnemer":
         st.header("Leutigste Deelnemer")
-        st.write("Ook nog jouw top-3 deelnemers invullen voor *De leutigste deelnemer*. Let op: jouw ingevulde top-3 is definitief en kan niet zomaar aangepast worden!")
+        st.write("Vul hier jouw top-3 deelnemers in voor *De leutigste deelnemer*. Let op: jouw ingevulde top-3 is definitief en kan niet zomaar aangepast worden!")
         # Filter bestaande keuzes van dit jurylid
         bestaande_keuzes = df_existing_top3[df_existing_top3["Jurylid"] == jurylid]
         if not bestaande_keuzes.empty:
             st.info("🟡 Eerdere top-3 gevonden:")
             bestaande_keuzes = bestaande_keuzes.sort_values("Punten", ascending=False)
-            bestaande_keuzes_voor_display = bestaande_keuzes[["Titel", "Vereniging", "Punten"]]
-            bestaande_keuzes_voor_display.columns = ["Titel", "Vereniging", "Punten"]
+            bestaande_keuzes_voor_display = bestaande_keuzes[["Nummer","Vereniging", "Titel", "Punten"]]
+            bestaande_keuzes_voor_display.columns = ["Nummer" ,"Vereniging", "Titel", "Punten"]
             bestaande_keuzes_voor_display.index = range(1, len(bestaande_keuzes_voor_display) + 1)
             bestaande_keuzes_voor_display.index.name = "Ranking"
             st.table(bestaande_keuzes_voor_display)
@@ -587,13 +600,14 @@ else:
                 btn_key_top3 = f"btn_save_top3_{jurylid}"
                 if st.button(f"💾 Opslaan top-3 ({jurylid})", key=btn_key_top3):
                     for keuze, pnt in zip(top_keuzes, punten):
-                        categorie, titel, vereniging = split_categorie_titel_vereniging(keuze)
+                        categorie, nummer, titel, vereniging = split_categorie_nummer_titel_vereniging(keuze)
         
-                        mask = (df_existing_top3['Jurylid'] == jurylid) & (df_existing_top3['Titel'] == titel)
+                        mask = (df_existing_top3['Jurylid'] == jurylid) & (df_existing_top3['Nummer'] == nummer)
         
                         new_row = {
                           "Jurylid": jurylid,
                           "Categorie": categorie,
+                          "Nummer": nummer,
                           "Titel": titel,
                           "Vereniging": vereniging,
                           "Punten": pnt,
@@ -643,19 +657,20 @@ else:
                 df_leutigste = df_top_3.iloc[1:]
                 df_leutigste["Categorie"] = df_leutigste["Categorie"].str.upper()
                 df = df.rename(columns={
+                                "Deelnemer_nummer":'Nummer',
                                 "Deelnemer_titel": "Titel",
                                 "Deelnemer_vereniging": "Vereniging"})
 
                 df_resultaten = df.copy()
                 # Eerst dataframe met alleen de uitslag per categorie. Geen uitslag voor carnavalesk
-                df_uitslag_categorien = df_resultaten.groupby(['Categorie', 'Vereniging', 'Titel'])[kolommen_criteria].sum().reset_index()
+                df_uitslag_categorien = df_resultaten.groupby(['Categorie', 'Nummer', 'Vereniging', 'Titel'])[kolommen_criteria].sum().reset_index()
                 df_uitslag_categorien["Totaal punten"] = df_uitslag_categorien[kolommen_criteria].sum(axis=1)
                 # sorteren & plaats toevoegen
                 df_uitslag_categorien = df_uitslag_categorien.sort_values(by=['Categorie', 'Totaal punten'], ascending = [True, False]).reset_index(drop=True)
                 df_uitslag_categorien['Plaats'] = df_uitslag_categorien.groupby("Categorie").cumcount() + 1
                 df_uitslag_categorien['Beoordelingscriterium'] = 'Algemeen'
 
-                kolomvolgorde = ["Plaats","Categorie", "Beoordelingscriterium", "Vereniging", "Titel", "Idee", "Bouwtechnisch", "Afwerking", "Carnavalesk", "Actie", "Totaal punten"]
+                kolomvolgorde = ["Plaats","Categorie", "Beoordelingscriterium", "Nummer", "Vereniging", "Titel", "Idee", "Bouwtechnisch", "Afwerking", "Carnavalesk", "Actie", "Totaal punten"]
                 df_uitslag_categorien = df_uitslag_categorien[kolomvolgorde]
 
                 categorie_volgorde = ["WAGENS A", "WAGENS B", "WAGENS C", 
@@ -674,7 +689,7 @@ else:
                 df_rapport_carnavalesk = df_uitslag_carnavalesk.copy()
 
                 # Recap van Leutigste deelnemer
-                df_uitslag_leutigste = df_leutigste.groupby(["Vereniging", "Titel"])["Punten"].sum().reset_index()
+                df_uitslag_leutigste = df_leutigste.groupby(["Nummer", "Vereniging", "Titel"])["Punten"].sum().reset_index()
                 df_uitslag_leutigste = df_uitslag_leutigste.sort_values(by="Punten", ascending=False).reset_index(drop=True)
                 df_uitslag_leutigste["Plaats"] = range(1, len(df_uitslag_leutigste) + 1)
                 df_uitslag_leutigste["Beoordelingscriterium"] = "Leutigste Deelnemer"
@@ -690,14 +705,16 @@ else:
                 
                 df_rapport = pd.concat([df_rapport_categorien, df_rapport_carnavalesk, df_rapport_leutigste], ignore_index=True)
                 
-                # Nr. toevoegen vanuit Programma Stoetopstellers 
-                df_nummers = programma_df.copy()
-                df_nummers = df_nummers.rename(columns={"titel": "Titel", 
-                                                        "vereniging": "Vereniging"})
-                df_rapport_met_nummers = df_rapport.merge(df_nummers[["nr.", "Titel"]], on=["Titel"], how='left')
-                df_rapport_met_nummers = df_rapport_met_nummers.rename(columns={"nr.": "Nr."})
-                kolommen_rapport_volgorde = ["Plaats", "Nr.", "Categorie", "Vereniging", "Titel", "Idee", "Bouwtechnisch", "Afwerking", "Carnavalesk", "Actie", "Totaal punten" ]
-                df_rapport_met_nummers = df_rapport_met_nummers[kolommen_rapport_volgorde]
+                ## Nr. toevoegen vanuit Programma Stoetopstellers 
+                # df_nummers = programma_df.copy()
+                # df_nummers = df_nummers.rename(columns={"titel": "Titel", 
+                #                                         "vereniging": "Vereniging"})
+                # df_rapport_met_nummers = df_rapport.merge(df_nummers[["nr.", "Titel"]], on=["Titel"], how='left')
+                # df_rapport_met_nummers = df_rapport_met_nummers.rename(columns={"nr.": "Nr."})
+                kolommen_rapport_volgorde = ["Plaats", "Nummer", "Categorie", "Vereniging", "Titel", "Idee", "Bouwtechnisch", "Afwerking", "Carnavalesk", "Actie", "Totaal punten" ]
+                
+                # met df_rapport ipv df_rapport_met_nummers, want nummers zitten er anno 10-02-26 al in.
+                df_rapport_met_nummers = df_rapport[kolommen_rapport_volgorde]
                 
                 # Uitslag/Rappot voor pers
                 top_3_algemeen = (df_rapport_categorien.groupby("Categorie", group_keys=False).head(3))
