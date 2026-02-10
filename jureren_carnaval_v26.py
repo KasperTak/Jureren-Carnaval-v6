@@ -574,26 +574,42 @@ else:
         with st.expander("Wat wordt er verwacht?"):
             st.write('''
                 Nadat u heeft ingelogd, verschijnen de desbetreffende tabbladen voor u. Deze tabbladen bevatten de (sub)categorieën waarover u beoordelingen moet uitbrengen.
-                Elk tabblad dinet u af te gaan om beoordelingen te geven over de deelnemers. Bij sommige tabbladen is het mogelijk dat deze geen deelnemers bevatten. Hier vindt dus 
+                Elk tabblad dient u af te gaan om beoordelingen te geven over de deelnemers. Bij sommige tabbladen is het mogelijk dat deze geen deelnemers bevatten. Hier vindt dus 
                 vanzelfsprekend geen beoordeling plaats. 
             ''')
         with st.expander("Hoe werkt het beoordelen?"):
             st.write('''
                 De beoordelingen worden per jurylid uitgevoerd. Hierbij wordt per (sub)categorie per deelnemer beoordeeld.
-                Er worden op vijf criteria beoordeeld: Idee, Bouwtechnisch, Afwerking, Carnavalesk, Actie. 
-                Per (sub)categorie per deelnemer komt een tabel tevoorschijn, waarin al de standaardwaarden: 5 staan. Door op het getal te klikken, kunt u het aanpassen 
-                naar uw eigen beoordeling. Wanneer u een deelnemer (dus een gehele tabel) heeft beoordeeld, dient u op de Opslaan-knop te drukken.
-                Dit slaat de beoordelingen op per deelnemer/tabel.
+                Er worden op vijf criteria beoordeeld: Idee, Bouwtechnisch, Afwerking, Carnavalesk & Actie.
                 
+                Per (sub)categorie per deelnemer komt een tabel tevoorschijn, waarin al de standaardwaarden: 5 staan. Door op het getal te klikken, kunt u het aanpassen 
+                naar uw eigen beoordeling. Wanneer u een deelnemer (dus een gehele tabel) heeft beoordeeld, dient u op de knop eronder te drukken. 
+                Daarmee wordt uw beoordeling in de wachtrij gezet om opgeslagen te worden. Om uw beoordelingen definitief op te laten slaan, dient u onderin op de knop 
+                'Alles opslaan naar Google Sheet' te drukken. Dit slaat uw beoordeling definitief op. :[blue-background[aangeraden wordt om **na elke deelnemer** 
+                                                                                                                        de beoordelingen definitief op te slaan.]]
+                U kunt altijd terugkomen naar uw beoordeling om deze aan te passen. Wanneer u vervolgens weer de beoordelingen opslaat, worden deze overgeschreven met uw originele beoordelingen.
+                
+            ''')
+        with st.expander("De Leutigste Deelnemer"):
+            st.write('''
+                In het  tabblad wordt naar uw top-3 deelnemers gevraagd. Hierbij wordt de eerste keuze als beste beschouwd en krijgt 3 punten. De nummer 2 ontvangt 2 punten 
+                en de nummer 3 ontvangt 1 punt.
+                Uiteindelijk worden a.d.h.v. alle top-3-lijsten van de juryleden bepaald welke deelnemer de Leutigste Deelnemer was dit jaar! 
+                Dit komt uiteraard terug in de algemene uitslag en de bijbehorende (pers)rapporten.
             ''')
         with st.expander("Mogelijke meldingen:"):
             st.write('Er zijn verschillende meldingen die tevoorschijn kunnen komen tijdens het (opslaan van de) beoordelingen.')
+            st.success("Goed! De actie is gelukt.")
             st.info("Mededeling; Niks aan de hand. Er zijn eerdere data gevonden.")
             st.warning("Waarschuwing; Er moet nog iets anders verricht worden.")
             st.error("Fout! Er is iets fout gegaan. Hier kunt u niks aan doen. Het is een fout dat de beheerder moet oplossen.")
             
         with st.expander("Hoe werkt het opslaan?"):
             st.write('''
+                Er zijn bij het beoordelen een paar knoppen te vinden: 
+                    :blue-background[Voeg beoordeling toe aan wachtrij (*nummer*)]: De beoordeling wordt in de wachtrij opgeslagen, om later (met de volgende knop) definitief op te slaan.
+                    :green-background[Alles opslaan naar Google Sheet]: De beoordelingen die in de wachtrij staan, worden definitief opgeslagen in een (verborgen) Google Sheet.
+                     
                 Wanneer de beoordelingen per deelnemer zijn ingevuld, worden deze gelijk opgeslagen in een verborgen bestand in de Cloud. 
                 Naast de vijf beoordelingscriteria worden ook de gebruikersnaam, categorie, vereniging, titel en tijd opgeslagen in het bestand. 
             ''')
@@ -602,13 +618,9 @@ else:
                 De uitslag kan pas worden bepaald wanneer ieder van de juryleden op de laatste knop: 'Definitief opslaan' heeft gedrukt.
                 De uitslag wordt vervolgens per categorie (Wagens, Groepen, T&K en E&D) bepaald o.b.v. de ingevulde scores.
                 Ook worden de resultaten van jullie top-3 deelnemers genomen om de Leutigste Deelnemer te bepalen. 
-                Uiteindelijk kan er op de knop: 'Als PDF opslaan' worden gedrukt om het overzicht van de uitslag in te zien.
+                Uiteindelijk kan zowel het algemeen rapport als het persrapport worden gedownload, waarin de uitslag staat.
             ''')
-        with st.expander("De Leutigste Deelnemer"):
-            st.write('''
-                In het laatste tabblad wordt naar uw top-3 deelnemers gevraagd. Hierbij wordt de eerste keuze als beste beschouwd en krijgt 3 punten. De nummer 3 ontvangt 1 punt.
-                Uiteindelijk worden door alle top-3-lijsten van de juryleden bepaald welke deelnemer de Leutigste Deelnemer was dit jaar!
-            ''')
+
     
         
     for categorie in tab_categories:
@@ -617,8 +629,9 @@ else:
     
 
     if st.session_state['active_tab'] == "Leutigste Deelnemer":
-        st.header("Leutigste Deelnemer")
-        st.write("Vul hier jouw top-3 deelnemers in voor *De leutigste deelnemer*. Let op: jouw ingevulde top-3 is definitief en kan niet zomaar aangepast worden!")
+        st.header(''':blue[Leutigste Deelnemer]''')
+        st.write(''':blue[Vul hier jouw top-3 deelnemers in voor *De leutigste deelnemer*. Let op: jouw ingevulde top-3 is definitief en kan niet zomaar aangepast worden!]''')
+        st.subheader(f" ", divider='green')
         # Filter bestaande keuzes van dit jurylid
         # bestaande_keuzes = df_existing_top3[df_existing_top3["Jurylid"] == jurylid]
         sheet_top3 = st.session_state.sheet_top3
@@ -641,7 +654,7 @@ else:
             keuze_2 = st.selectbox("Kies uw nummer 2", alle_titels_met_vereniging, key='top2_selectbox')
             keuze_3 = st.selectbox("Kies uw nummer 3", alle_titels_met_vereniging, key='top3_selectbox')
             
-            st.divider()
+            st.subheader(f" ", divider='green')
             st.write("### Jouw top 3:")
             st.write(f"🥇 Nummer 1: \t{keuze_1}")
             st.write(f"🥈 Nummer 2: \t{keuze_2}")
@@ -698,22 +711,48 @@ else:
         
         alle_juryleden = [j for j in st.secrets["users"].keys() if not j.startswith("admin")]
         
-        # Bepaal wie beoordelingen heeft ingeleverd
-        ingeleverde_juryleden = df_beoordelingen["Jurylid"].unique().tolist()
-        missende_juryleden = [j for j in alle_juryleden if j not in ingeleverde_juryleden]
+        # -------------------------- controle: ontbrekende beoordelingen-----------------------
+        alle_deelnemers = (programma_df[['Nr.', 'Vereniging', 'Titel']].drop_duplicates().sort_values('Nr.'))
+        beoordeeld = df_beoordelingen[['Jurylid', 'Nr.']].drop_duplicates()
+        
+        verwacht = (pd.MultiIndex().from_product([alle_juryleden, alle_deelnemers["Nr."]],
+                                                 names=['Jurylid', 'Nr.']
+                                                 ).to_frame(index=False))
+        
+        ontbrekend = (verwacht
+                      .merge(beoordeeld, on=['Jurylid', 'Nr.'], how='left',indicator=True)
+                      .query("_merge == 'left_only'")
+                      .drop(columns="_merge"))
+        
+        # extra info toevoegen
+        ontbrekend = (
+            ontbrekend
+            .merge(alle_deelnemers, on='Nr.', how='left')
+            .sort_values(['Jurylid', 'Nr.']))
+        
         
         # Toon status
-        st.subheader("Status juryleden")
-        if missende_juryleden:
-            st.warning("⚠️ Niet alle juryleden hebben hun beoordelingen afgerond.")
-            st.write("Nog ontbrekend:", ", ".join(missende_juryleden))
-        else:
+        st.subheader(''':blue[Status juryleden]''')
+        if ontbrekend.empty:
             st.success("✅ Alle juryleden hebben hun beoordelingen ingeleverd!")
+        else:
+            st.warning("⚠️ Niet alle juryleden hebben hun beoordelingen afgerond.")
+            
+            for jurylid, groep in ontbrekend.groupby("Jurylid"):
+                st.markdown(f"**{jurylid} mist nog beoordelingen voor:**")
+                for _, row in groep.iterrows():
+                    st.write(f" Nr. {row['Nr.']} | {row['Vereniging']} | ({row['Titel']})")
+                    
             
         # Forceerbare berekening
         forceer = st.checkbox("💥 Forceren (ook als nog niet alles is ingeleverd)")
         
-        if (not missende_juryleden) or st.session_state['soort'] not in ['w', 'g'] or forceer:
+        mag_berekenen = (
+            ontbrekend.empty
+            or st.session_state['soort'] not in ['w', 'g']
+            or forceer
+            )
+        if mag_berekenen:
             if st.button("📊 Bereken uitslag"):
                 # st.info("Uitslag wordt berekend...")
                 
@@ -848,7 +887,8 @@ else:
             
     if st.session_state['active_tab'] == "Secretariaat":
         st.subheader(''':blue[**Secretariaat: volledige beoordelingen**]''')
-        st.write(''':blue[Hier kan de volledige beoordeling worden gedownload en vervolgens worden geüpload om nieuwe uitslag te berekenen.]''')
+        st.write(''':blue[Hier kan de volledige beoordeling worden gedownload en vervolgens worden aangepast. De aangepaste beoordelingen '''
+                 '''kunnen in het tabblad: **Uitslag** worden geüpload om de nieuwe uitslag te berekenen.]''')
         
         # ------------------------ Normale beoordelingen -------------------------------
         st.space("small")
