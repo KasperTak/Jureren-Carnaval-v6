@@ -716,7 +716,7 @@ else:
         beoordeeld = df_beoordelingen[['Jurylid', 'Deelnemer_nummer']].drop_duplicates()
         beoordeeld = beoordeeld.rename(columns={'Deelnemer_nummer': "Nr."})
         
-        verwacht = (pd.MultiIndex().from_product([alle_juryleden, alle_deelnemers["Nr."]],
+        verwacht = (pd.MultiIndex.from_product([alle_juryleden, alle_deelnemers["Nr."]],
                                                  names=['Jurylid', 'Nr.']
                                                  ).to_frame(index=False))
         
@@ -950,5 +950,6 @@ else:
         st.badge("Let op: wijzigingen hier **overschrijven de jury-invoer**."
                 "Na upload kun je direct naar het tabblad **Uitslag** om opnieuw te berekenen.", color='violet')
         
+
 
 
