@@ -432,9 +432,10 @@ def beoordeling_categorie_jurylid(categorie, jurylid, sheet_name="Beoordelingen_
         st.info(f"📦 {len(st.session_state['pending_saves'])} beoordelingen klaar om te uploaden")
         if st.button('📤 Alles opslaan naar Google Sheet'):
             try:
+                sheet - client.open("Jury_beoordelingen_2026_v1").worksheet(sheet_name)
                 # df_existing_beoordeling = load_sheet_data(sheet_name)
                 df_existing_beoordeling = st.session_state.df_beoordelingen_cache
-                sheet = st.session_state.sheet_beoordelingen
+                # sheet = st.session_state.sheet_beoordelingen
                 to_append = [] # nieuwe rijen verzamelen
                 updates = [] # bestaande rijen (row_index, values)
                 for row in st.session_state['pending_saves']:
@@ -814,6 +815,5 @@ else:
         else:
             st.info("⏳ Wacht op alle juryleden, of vink 'forceren' aan om toch te berekenen.")
     
-
 
 
