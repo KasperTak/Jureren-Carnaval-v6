@@ -769,6 +769,7 @@ else:
                     
         
         st.subheader(f" ", divider = 'green')
+        st.write(''':green-background[Onderstaande checkbox kan worden aangevinkt wanneer de uitslag bereken kan/mag worden, zelfs indien nog niet elk jurylid een beoordeling heeft doorgevoerd.''')
         # Forceerbare berekening
         forceer = st.checkbox("💥 Forceren (ook als nog niet alles is ingeleverd)")
         
